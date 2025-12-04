@@ -1,0 +1,9 @@
+"loan.how_much" = "How much ?";
+"loan.how_long" = "How long ?";
+"loan.apply_now" = "Apply now";
+"loan.interest_rate" = "Interest rate";
+"loan.total_to_repay" = "Total to repay";
+"loan.due_date" = "Due date";
+"loan.success_title" = "Success";
+"loan.success_message" = "Your application was sent successfully.";
+"loan.error_title" = "Error";
