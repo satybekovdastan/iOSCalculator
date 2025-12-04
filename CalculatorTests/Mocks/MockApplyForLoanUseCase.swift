@@ -11,7 +11,7 @@ import Testing
 import Foundation
 @testable import Calculator
 
-final class MockLoanApplicationUseCase: LoanApplicationUseCase, @unchecked Sendable {
+final class MockApplyForLoanUseCase: ApplyForLoanUseCase, @unchecked Sendable {
     var resultToReturn: Result<LoanApplicationResult, DomainError>?
     
     func apply(loan: LoanApplicationRequest) async -> Result<LoanApplicationResult, DomainError> {

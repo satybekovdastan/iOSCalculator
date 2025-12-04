@@ -19,8 +19,8 @@ struct LoanCalculatorStoreTests {
     func makeSUT(
         appUseCase: MockLoanApplicationUseCase = MockLoanApplicationUseCase(),
         prefsUseCase: MockLoanPreferencesUseCase = MockLoanPreferencesUseCase()
-    ) -> LoanCalculatorStore {
-        return LoanCalculatorStore(useCase: appUseCase, prefsUseCase: prefsUseCase)
+    ) -> LoanStore {
+        return LoanStore(useCase: appUseCase, prefsUseCase: prefsUseCase)
     }
     
     @Test("Initialization loads saved preferences and theme")

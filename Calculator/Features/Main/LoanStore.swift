@@ -15,7 +15,7 @@ import Foundation
 /// - Через `LoanPreferencesUseCase` загружает и сохраняет последние выборы (amount, term, theme).
 /// - Предоставляет вычисляемые значения для UI: процентную ставку, сумму к возврату и дату возврата.
 @MainActor
-final class LoanCalculatorStore: ObservableObject {
+final class LoanStore: ObservableObject {
     
     @Published private(set) var state: LoanState
     

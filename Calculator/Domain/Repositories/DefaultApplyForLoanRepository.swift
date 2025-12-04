@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class DefaultLoanApplicationRepository: BaseRepository, LoanApplicationRepository {
+final class DefaultApplyForLoanRepository: BaseRepository, ApplyForLoanRepository {
     
     
     // MARK: Properties
@@ -22,15 +22,15 @@ final class DefaultLoanApplicationRepository: BaseRepository, LoanApplicationRep
     
     // MARK: Public Methods
     
-    func loanApplication(request: LoanApplicationRequest) async -> Result<LoanApplicationResult, DomainError> {
-        let request = LoanApplicationRequestDescriptor.loanApplication(body: request)
+    func apply(request: LoanApplicationRequest) async -> Result<LoanApplicationResult, DomainError> {
+        let request = LoanApplicationRequestDescriptor.apply(body: request)
         
         do {
             let response: LoanApplicationResponse = try await networkManager.performRequest(
                 request,
                 allowRetry: false
             )
-            return .success(mapSendCode(response))
+            return .success(mapApply(response))
         } catch {
             return .failure(mapError(error))
         }
@@ -39,7 +39,7 @@ final class DefaultLoanApplicationRepository: BaseRepository, LoanApplicationRep
     
     // MARK: Private Methods
     
-    private func mapSendCode(_ response: LoanApplicationResponse) -> LoanApplicationResult {
+    private func mapApply(_ response: LoanApplicationResponse) -> LoanApplicationResult {
         LoanApplicationResult(
             id: response.id
         )
