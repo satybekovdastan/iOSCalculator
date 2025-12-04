@@ -14,10 +14,10 @@ import Foundation
 
 @Suite("LoanCalculatorStore Tests")
 @MainActor
-struct LoanCalculatorStoreTests {
+struct LoanStoreTests {
     
     func makeSUT(
-        appUseCase: MockLoanApplicationUseCase = MockLoanApplicationUseCase(),
+        appUseCase: MockApplyForLoanUseCase = MockApplyForLoanUseCase(),
         prefsUseCase: MockLoanPreferencesUseCase = MockLoanPreferencesUseCase()
     ) -> LoanStore {
         return LoanStore(useCase: appUseCase, prefsUseCase: prefsUseCase)
@@ -25,7 +25,7 @@ struct LoanCalculatorStoreTests {
     
     @Test("Initialization loads saved preferences and theme")
     func testInitializationLoadsPreferences() async throws {
-        let mockAppUseCase = MockLoanApplicationUseCase()
+        let mockAppUseCase = MockApplyForLoanUseCase()
         let mockPrefsUseCase = MockLoanPreferencesUseCase()
         
         mockPrefsUseCase.savedPrefs = LoanPreferences(amount: 9999, termIndex: 2)
@@ -63,7 +63,7 @@ struct LoanCalculatorStoreTests {
     
     @Test("Successful loan application updates the result")
     func testApplySuccess() async throws {
-        let mockAppUseCase = MockLoanApplicationUseCase()
+        let mockAppUseCase = MockApplyForLoanUseCase()
         let expectedResult = LoanApplicationResult(id: 123)
         
         mockAppUseCase.setResult(.success(expectedResult))
@@ -79,7 +79,7 @@ struct LoanCalculatorStoreTests {
     
     @Test("Failed loan application sets the error message")
     func testApplyFailure() async throws {
-        let mockAppUseCase = MockLoanApplicationUseCase()
+        let mockAppUseCase = MockApplyForLoanUseCase()
         let expectedError = DomainError(message: "Service Unavailable")
         
         mockAppUseCase.setResult(.failure(expectedError))

@@ -9,31 +9,31 @@ import Foundation
 
 enum LoanApplicationRequestDescriptor: RequestDescriptor {
     
-    case loanApplication(body: LoanApplicationRequest)
+    case apply(body: LoanApplicationRequest)
 
     var path: String {
         switch self {
-        case .loanApplication:
+        case .apply:
             "posts"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .loanApplication: .post
+        case .apply: .post
         }
     }
     
     var headers: [String : String]? {
         switch self {
-        case .loanApplication:
+        case .apply:
             nil
         }
     }
     
     var body: Encodable? {
         switch self {
-        case .loanApplication(let body):
+        case .apply(let body):
             [
                 "amount": body.amount,
                 "period": body.period,
@@ -44,7 +44,7 @@ enum LoanApplicationRequestDescriptor: RequestDescriptor {
     
     var requiresAuth: Bool {
         switch self {
-        case .loanApplication: false
+        case .apply: false
         }
     }
     

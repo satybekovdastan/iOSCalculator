@@ -1,5 +1,5 @@
 //
-//  CalculatorView.swift
+//  LoanView.swift
 //  Calculator
 //
 //  Created by DAS  on 4/12/25.
@@ -7,11 +7,11 @@
 
 import SwiftUI
 
-struct LoanCalculatorView: View {
+struct LoanView: View {
     
-    @StateObject private var store: LoanCalculatorStore
+    @StateObject private var store: LoanStore
     
-    init(store: LoanCalculatorStore) {
+    init(store: LoanStore) {
         _store = StateObject(wrappedValue: store)
     }
     

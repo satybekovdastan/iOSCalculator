@@ -12,7 +12,7 @@ struct RootView: View {
     @EnvironmentObject private var coordinator: AppCoordinator
     
     var body: some View {
-        Assembler.shared.resolver.resolve(LoanCalculatorView.self)
+        Assembler.shared.resolver.resolve(LoanView.self)
         
         /* На будущее если потребуется ароверка на авторизацию
         if coordinator.isAuthenticated {

@@ -11,12 +11,12 @@ final class RepositoryAssembly: Assembly {
     
     func assemble(container: Swinject.Container) {
         
-        container.register(LoanApplicationRepository.self) { resolver in
+        container.register(ApplyForLoanRepository.self) { resolver in
             guard let networkManager = resolver.resolve(NetworkManager.self) else {
                 fatalError("Unable to resolver NetworkManager")
             }
             
-            return DefaultLoanApplicationRepository(networkManager: networkManager)
+            return DefaultApplyForLoanRepository(networkManager: networkManager)
         }
         
         container.register(LoanPreferencesRepository.self) { resolver in

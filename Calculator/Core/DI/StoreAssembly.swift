@@ -1,5 +1,5 @@
 //
-//  ViewModelAssembly.swift
+//  StoreAssembly.swift
 //  Calculator
 //
 //  Created by DAS  on 4/12/25.
@@ -11,8 +11,8 @@ import Swinject
 final class StoreAssembly: @preconcurrency Assembly {
     
     func assemble(container: Swinject.Container) {
-        container.register(LoanCalculatorStore.self) { resolver in
-            guard let userUseCase = resolver.resolve(LoanApplicationUseCase.self) else {
+        container.register(LoanStore.self) { resolver in
+            guard let userUseCase = resolver.resolve(ApplyForLoanUseCase.self) else {
                 fatalError("Assembler was unable to resolve LoanApplicationUseCase")
             }
             
@@ -20,7 +20,7 @@ final class StoreAssembly: @preconcurrency Assembly {
                 fatalError("Assembler was unable to resolve LoanPreferencesUseCase")
             }
             
-            return LoanCalculatorStore(
+            return LoanStore(
                 useCase:  userUseCase,
                 prefsUseCase: prefsUseCase
             )

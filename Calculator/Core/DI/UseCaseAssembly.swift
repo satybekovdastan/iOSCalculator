@@ -11,12 +11,12 @@ final class UseCaseAssembly: Assembly {
     
     func assemble(container: Swinject.Container) {
     
-        container.register(LoanApplicationUseCase.self) { resolver in
-            guard let repository = resolver.resolve(LoanApplicationRepository.self) else {
+        container.register(ApplyForLoanUseCase.self) { resolver in
+            guard let repository = resolver.resolve(ApplyForLoanRepository.self) else {
                 fatalError("Unable to resolve LoanApplicationRepository")
             }
             
-            return DefaultLoanApplicationUseCase(repository: repository)
+            return DefaultApplyForLoanUseCase(repository: repository)
         }
         
         container.register(LoanPreferencesUseCase.self) { resolver in

@@ -1,5 +1,5 @@
 //
-//  LoanCalculatorViewModel.swift
+//  LoanStore.swift
 //  Calculator
 //
 //  Created by DAS  on 4/12/25.
@@ -11,7 +11,7 @@ import Foundation
 /// LoanCalculatorStore
 /// Хранит состояние экрана калькулятора займа и управляет им в стиле UDF/Redux.
 /// - Применяет `loanReducer` к `LoanState` по входящим `LoanAction`.
-/// - Через `LoanApplicationUseCase` отправляет заявку (`apply()`).
+/// - Через `ApplyForLoanUseCase` отправляет заявку (`apply()`).
 /// - Через `LoanPreferencesUseCase` загружает и сохраняет последние выборы (amount, term, theme).
 /// - Предоставляет вычисляемые значения для UI: процентную ставку, сумму к возврату и дату возврата.
 @MainActor
@@ -19,13 +19,13 @@ final class LoanStore: ObservableObject {
     
     @Published private(set) var state: LoanState
     
-    private let useCase: LoanApplicationUseCase
+    private let useCase: ApplyForLoanUseCase
     private let prefsUseCase: LoanPreferencesUseCase
     private let reducer: (inout LoanState, LoanAction) -> Void
     
     private let interestRate: Double = 0.15 // 15%
     
-    init(useCase: LoanApplicationUseCase, prefsUseCase: LoanPreferencesUseCase) {
+    init(useCase: ApplyForLoanUseCase, prefsUseCase: LoanPreferencesUseCase) {
         self.useCase = useCase
         self.prefsUseCase = prefsUseCase
         self.state = LoanState()

@@ -11,12 +11,12 @@ final class ViewAssembly: Assembly {
     
     func assemble(container: Swinject.Container) {
 
-        container.register(LoanCalculatorView.self) { r in
+        container.register(LoanView.self) { r in
             // Ensure we’re on the main actor when constructing the SwiftUI View.
-            guard let store = r.resolve(LoanCalculatorStore.self) else {
+            guard let store = r.resolve(LoanStore.self) else {
                 fatalError("Unable to resolve LoanCalculatorStore")
             }
-            return LoanCalculatorView(store: store)
+            return LoanView(store: store)
         }.inObjectScope(.transient)
         
     }

@@ -25,7 +25,7 @@
 
 - В корне репозитория есть пакет Swinject (Package.swift экспортирует продукты Swinject и Swinject-Dynamic).  
 - Назначение: внедрение зависимостей (Container/Assembler), скопы (transient/graph/container), потокобезопасность и модульная регистрация.  
-- В модуле калькулятора зависимости передаются как протоколы (LoanApplicationUseCase, LoanPreferencesUseCase).  
+- В модуле калькулятора зависимости передаются как протоколы (ApplyForLoanUseCase, LoanPreferencesUseCase).  
 - В реальном приложении они регистрируются в контейнере Swinject в композиционном корне и резолвятся при создании экрана/Store.  
 - В тестах используются моки.  
 
@@ -33,19 +33,31 @@
 
 - **Package.swift** — SwiftPM-пакет Swinject (поддерживает iOS, macOS, tvOS, watchOS, visionOS).  
 - **Calculator** (модуль приложения):  
-  - **LoanCalculatorStore.swift** — Store: хранит `LoanState`, применяет `loanReducer`, управляет сайд‑эффектами (загрузка/сохранение префов, отправка заявки), предоставляет вычисляемые значения для UI.  
+  - **LoanStore.swift** — Store: хранит `LoanState`, применяет `loanReducer`, управляет сайд‑эффектами (загрузка/сохранение префов, отправка заявки), предоставляет вычисляемые значения для UI.  
   - **LoanState.swift** — состояние экрана: `amount`, `termIndex`, диапазоны, `terms`, `isLoading`, `result`, `errorMessage`, `theme`.  
   - **LoanApplicationRequest.swift / LoanApplicationResult.swift** — модели запроса/результата.  
   - **DomainError.swift** — доменная ошибка.  
   - **Use cases**:  
-    - `LoanApplicationUseCase.swift` — протокол + `DefaultLoanApplicationUseCase` (делегирует в Repository).  
+    - `ApplyForLoanUseCase.swift` — протокол + `DefaultApplyForLoanUseCase` (делегирует в Repository).  
     - `LoanPreferencesUseCase.swift` — протокол + `DefaultLoanPreferencesUseCase` (делегирует в Repository).  
   - **Repositories (контракты)**:  
-    - `LoanApplicationRepository.swift` — отправка заявки.  
+    - `ApplyForLoanRepository.swift` — отправка заявки.  
     - `LoanPreferencesRepository.swift` — загрузка/сохранение преференций и темы.  
+  - **Networking
+    - `RequestDescriptor.swift` — контракт запроса (path, method, headers, body, requiresAuth)
+    - `HTTPMethod` — GET/POST/PUT/PATCH/DELETE
+    - `LoanApplicationRequestDescriptor.swift` — эндпоинты модуля займа (.loanApplication)
+    - `BaseURLProvider.swift` — базовый URL из Info.plist (“API base URL”)
+    - `NetworkManager.swift` — абстракция клиента
+    - `DefaultNetworkManager` — URLSession, JSON encode/decode, обработка статусов, OSLog
+
+• DI (Swinject)
+   • ManagerAssembly.swift􀰓 — регистрация BaseURLProvider, NetworkManager, UserDefaultsManager
+   • (далее) регистрируются репозитории и use case
+
 - **Tests**:  
-  - `LoanCalculatorStoreTests.swift` — тесты Store на Swift Testing.  
-  - Моки: `MockLoanApplicationUseCase.swift`, `MockLoanPreferencesUseCase.swift`.  
+  - `LoanStoreTests.swift` — тесты Store на Swift Testing.  
+  - Моки: `MockApplyForLoanUseCase.swift`, `MockLoanPreferencesUseCase.swift`.  
 
 ## Как это работает (коротко)
 
@@ -86,14 +98,14 @@
   - Сохранение при изменении суммы/срока.  
   - Корректный расчет `totalRepayment` и `interestRateText`.  
   - Успешная и неуспешная отправка заявки (`result`/`errorMessage`, снятие `isLoading`).  
-- Моки: `MockLoanApplicationUseCase`, `MockLoanPreferences
+- Моки: `MockApplyForLoanUseCase`, `MockLoanPreferences
 
 ## DI в реальном приложении (пример на словах)
 - В композиционном корне создается Container/Assembler (Swinject).
 - Регистрируются:
-   - LoanApplicationRepository (реальная сеть) -> LoanApplicationUseCase (Default…)
+   - ApplyForLoanRepository (реальная сеть) -> ApplyForLoanUseCase (Default…)
    - LoanPreferencesRepository (например, UserDefaults) -> LoanPreferencesUseCase (Default…)
-   - LoanCalculatorStore — резолвится с нужными зависимостями.
+   - LoanStore — резолвится с нужными зависимостями.
 - Экран получает готовый Store через контейнер.
 
 ## Заметки

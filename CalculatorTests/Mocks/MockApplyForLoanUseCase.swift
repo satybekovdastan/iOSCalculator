@@ -1,5 +1,5 @@
 //
-//  MockLoanApplicationUseCase.swift
+//  MockApplyForLoanUseCase.swift
 //  Calculator
 //
 //  Created by DAS  on 5/12/25.

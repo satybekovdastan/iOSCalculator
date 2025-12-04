@@ -1,5 +1,5 @@
 //
-//  LoanApplicationUseCase.swift
+//  ApplyForLoanUseCase.swift
 //  Calculator
 //
 //  Created by DAS  on 4/12/25.
@@ -7,25 +7,25 @@
 
 import Foundation
 
-protocol LoanApplicationUseCase: Sendable {
+protocol ApplyForLoanUseCase: Sendable {
     func apply(loan: LoanApplicationRequest) async -> Result<LoanApplicationResult, DomainError>
 
 }
 
-final class DefaultLoanApplicationUseCase: LoanApplicationUseCase, @unchecked Sendable {
+final class DefaultApplyForLoanUseCase: ApplyForLoanUseCase, @unchecked Sendable {
     
     // MARK: Properties
     
-    private let repository: LoanApplicationRepository
+    private let repository: ApplyForLoanRepository
     
     // MARK: Initialization
     
-    init(repository: LoanApplicationRepository) {
+    init(repository: ApplyForLoanRepository) {
         self.repository = repository
     }
     
     func apply(loan: LoanApplicationRequest) async -> Result<LoanApplicationResult, DomainError> {
-        await repository.loanApplication(request: loan)
+        await repository.apply(request: loan)
     }
     
 }
