@@ -7,9 +7,9 @@
 ## Кратко
 
 - Экран расчета займа: ввод суммы, выбор срока, расчет итоговой суммы и даты возврата, отправка заявки.  
-- Архитектура презентации: UDF/Redux-подход (Store + Reducer).  
-- Бизнес-логика вынесена в Use Case слой, доступ к данным — через Repository контракты.  
-- DI: Swinject (в репозитории присутствует как SwiftPM-пакет).  
+- Архитектура презентации: UDF/Redux подход (Store + Reducer).  
+- Бизнес-логика вынесена в Use Case слой, доступ к данным через Repository контракты.  
+- DI: Swinject (в репозитории присутствует как SwiftPM пакет).  
 - Тесты: Swift Testing (@Suite/@Test, #expect), покрывают ключевые сценарии Store.  
 
 ## Стек
@@ -21,50 +21,42 @@
 - Форматирование: Foundation FormatStyle (числа/даты)  
 - Тестирование: Swift Testing  
 
-## Где здесь Swinject и зачем
-
-- В корне репозитория есть пакет Swinject (Package.swift экспортирует продукты Swinject и Swinject-Dynamic).  
-- Назначение: внедрение зависимостей (Container/Assembler), скопы (transient/graph/container), потокобезопасность и модульная регистрация.  
-- В модуле калькулятора зависимости передаются как протоколы (ApplyForLoanUseCase, LoanPreferencesUseCase).  
-- В реальном приложении они регистрируются в контейнере Swinject в композиционном корне и резолвятся при создании экрана/Store.  
-- В тестах используются моки.  
-
 ## Структура (ключевое)
 
-- **Package.swift** — SwiftPM-пакет Swinject (поддерживает iOS, macOS, tvOS, watchOS, visionOS).  
+- **Package.swift** SwiftPM пакет Swinject (поддерживает iOS, macOS, tvOS, watchOS, visionOS).  
 - **Calculator** (модуль приложения):  
-  - **LoanStore.swift** — Store: хранит `LoanState`, применяет `loanReducer`, управляет сайд‑эффектами (загрузка/сохранение префов, отправка заявки), предоставляет вычисляемые значения для UI.  
-  - **LoanState.swift** — состояние экрана: `amount`, `termIndex`, диапазоны, `terms`, `isLoading`, `result`, `errorMessage`, `theme`.  
-  - **LoanApplicationRequest.swift / LoanApplicationResult.swift** — модели запроса/результата.  
-  - **DomainError.swift** — доменная ошибка.  
+  - **LoanStore.swift** Store: хранит `LoanState`, применяет `loanReducer`, управляет сайд‑эффектами (загрузка/сохранение префов, отправка заявки), предоставляет вычисляемые значения для UI.  
+  - **LoanState.swift** состояние экрана: `amount`, `termIndex`, диапазоны, `terms`, `isLoading`, `result`, `errorMessage`, `theme`.  
+  - **LoanApplicationRequest.swift / LoanApplicationResult.swift** модели запроса/результата.  
+  - **DomainError.swift** доменная ошибка.  
   - **Use cases**:  
-    - `ApplyForLoanUseCase.swift` — протокол + `DefaultApplyForLoanUseCase` (делегирует в Repository).  
-    - `LoanPreferencesUseCase.swift` — протокол + `DefaultLoanPreferencesUseCase` (делегирует в Repository).  
+    - `ApplyForLoanUseCase.swift` протокол + `DefaultApplyForLoanUseCase` (делегирует в Repository).  
+    - `LoanPreferencesUseCase.swift` протокол + `DefaultLoanPreferencesUseCase` (делегирует в Repository).  
   - **Repositories (контракты)**:  
-    - `ApplyForLoanRepository.swift` — отправка заявки.  
-    - `LoanPreferencesRepository.swift` — загрузка/сохранение преференций и темы.  
+    - `ApplyForLoanRepository.swift` отправка заявки.  
+    - `LoanPreferencesRepository.swift` загрузка/сохранение преференций и темы.  
   - **Networking
-    - `RequestDescriptor.swift` — контракт запроса (path, method, headers, body, requiresAuth)
-    - `HTTPMethod` — GET/POST/PUT/PATCH/DELETE
-    - `LoanApplicationRequestDescriptor.swift` — эндпоинты модуля займа (.loanApplication)
-    - `BaseURLProvider.swift` — базовый URL из Info.plist (“API base URL”)
-    - `NetworkManager.swift` — абстракция клиента
-    - `DefaultNetworkManager` — URLSession, JSON encode/decode, обработка статусов, OSLog
+    - `RequestDescriptor.swift` контракт запроса (path, method, headers, body, requiresAuth)
+    - `HTTPMethod` GET/POST/PUT/PATCH/DELETE
+    - `LoanApplicationRequestDescriptor.swift` эндпоинты модуля займа (.loanApplication)
+    - `BaseURLProvider.swift` базовый URL из Info.plist (“API base URL”)
+    - `NetworkManager.swift` абстракция клиента
+    - `DefaultNetworkManager` URLSession, JSON encode/decode, обработка статусов, OSLog
 
-• DI (Swinject)
-   • ManagerAssembly.swift􀰓 — регистрация BaseURLProvider, NetworkManager, UserDefaultsManager
-   • (далее) регистрируются репозитории и use case
+  - **DI (Swinject)
+    - `ManagerAssembly.swift` регистрация BaseURLProvider, NetworkManager, UserDefaultsManager
+    - `(далее)` регистрируются репозитории и use case
 
 - **Tests**:  
-  - `LoanStoreTests.swift` — тесты Store на Swift Testing.  
+  - `LoanStoreTests.swift` тесты Store на Swift Testing.  
   - Моки: `MockApplyForLoanUseCase.swift`, `MockLoanPreferencesUseCase.swift`.  
 
 ## Как это работает (коротко)
 
 - `Store` (`@MainActor`) хранит `LoanState` и принимает `LoanAction` через `send(_:)`.  
-- `.setAmount` / `.setTermIndex` — применяют редьюсер и сохраняют преференции.  
-- `.setTheme` — применяет редьюсер и сохраняет тему.  
-- `.apply` — выставляет загрузку, формирует `LoanApplicationRequest`, вызывает `useCase.apply`, по результату пишет `result` или `errorMessage` и снимает загрузку.  
+- `.setAmount` / `.setTermIndex` применяют редьюсер и сохраняют преференции.  
+- `.setTheme` применяет редьюсер и сохраняет тему.  
+- `.apply` выставляет загрузку, формирует `LoanApplicationRequest`, вызывает `useCase.apply`, по результату пишет `result` или `errorMessage` и снимает загрузку.  
 
 Вычисляемые значения для UI:  
 
@@ -80,7 +72,7 @@
 
 2. **Клонирование**  
    - `git clone <repo_url>`  
-   - Откройте проект в Xcode (`Package.swift` или `.xcodeproj`/`.xcworkspace` — в зависимости от структуры).  
+   - Откройте проект в Xcode (`Package.swift` или `.xcodeproj`/`.xcworkspace` в зависимости от структуры).  
 
 3. **Зависимости**  
    - Swinject уже в репозитории как SwiftPM-пакет. Xcode подтянет и соберет автоматически.  
@@ -105,10 +97,10 @@
 - Регистрируются:
    - ApplyForLoanRepository (реальная сеть) -> ApplyForLoanUseCase (Default…)
    - LoanPreferencesRepository (например, UserDefaults) -> LoanPreferencesUseCase (Default…)
-   - LoanStore — резолвится с нужными зависимостями.
+   - LoanStore резолвится с нужными зависимостями.
 - Экран получает готовый Store через контейнер.
 
 ## Заметки
 - DomainError: Equatable реализован упрощенно (в тестовых целях).
-- Реальные реализации репозиториев (сеть/хранилище) опущены — в тестовом проекте достаточно контрактов и моков.
+- Реальные реализации репозиториев (сеть/хранилище) опущены в тестовом проекте достаточно контрактов и моков.
 - Store помечен @MainActor для потокобезопасной работы с UI.
