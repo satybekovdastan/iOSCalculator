@@ -1,98 +1,87 @@
-# iOSCalculator
-
-Calculator
+Loan Calculator (тестовый проект) 
 
 Кратко
-Calculator — демо-приложение для расчета займа и оформления заявки. Используются слои UseCase/Repository, Swift Concurrency (async/await) и модульные тесты на новом Swift Testing.
+• Экран расчета займа: ввод суммы, выбор срока, расчет итоговой суммы и даты возврата, отправка заявки.
+• Архитектура презентации: UDF/Redux-подход (Store + Reducer).
+• Бизнес-логика вынесена в Use Case слой, доступ к данным — через Repository контракты.
+• DI: Swinject (в репозитории присутствует как SwiftPM пакет).
+• Тесты: Swift Testing (@Suite/@Test, #expect), покрывают ключевые сценарии Store.
 
-Требования
-• Xcode 16.x (Swift Testing поддерживается начиная с Xcode 15)
-• Swift 5.9+
-• Платформы (по умолчанию предполагается iOS 17+; если есть другие цели — проект собирается как обычный iOS проект)
+Стек
+• Swift 5.9+, Xcode 15+
+• Swift Concurrency: async/await, @MainActor
+• DI: Swinject
+• Архитектура: UDF/Redux (State, Action, Reducer, Store) + Use Case + Repository
+• Форматирование: Foundation FormatStyle (числа/даты)
+• Тестирование: Swift Testing
 
-Структура проекта
-• Calculator (модуль приложения)
-   • Domain
-      • Models
-         • LoanPreferences
-         • DomainError
-         • LoanApplicationRequest
-         • LoanApplicationResult
-         • LoanTheme
-      • UseCases
-         • LoanApplicationUseCase.swift
-            • Протокол LoanApplicationUseCase
-            • Реализация DefaultLoanApplicationUseCase (через LoanApplicationRepository)
-         • LoanPreferencesUseCase.swift􀰓
-            • Структура LoanPreferences
-            • Протокол LoanPreferencesUseCase
-            • Реализация DefaultLoanPreferencesUseCase (через LoanPreferencesRepository)
-   • Data
-      • Repositories
-         • LoanApplicationRepository (предполагается)
-         • LoanPreferencesRepository (предполагается)
-   • Presentation
-      • Store
-         • LoanCalculatorStore (управление состоянием калькулятора; используется в тестах)
-   • UI
-      • Экран калькулятора (предполагается SwiftUI/UIKit)
-• Tests
-   • LoanCalculatorStoreTests.swift􀰓 — тесты для LoanCalculatorStore на Swift Testing
-   • Mocks
-      • MockLoanApplicationUseCase.swift􀰓 — мок для LoanApplicationUseCase
-      • MockLoanPreferencesUseCase.swift􀰓 — мок для LoanPreferencesUseCase
+Где здесь Swinject и зачем
+• В корне репозитория есть пакет Swinject (Package.swift􀰓 экспортирует продукты Swinject и Swinject-Dynamic).
+• Назначение: внедрение зависимостей (Container/Assembler), скопы (transient/graph/container), потокобезопасность и модульная регистрация.
+• В модуле калькулятора зависимости передаются как протоколы (LoanApplicationUseCase, LoanPreferencesUseCase). В реальном приложении они регистрируются в контейнере Swinject в композиционном корне и резолвятся при создании экрана/Store. В тестах используются моки.
 
-Ключевые типы
-• LoanPreferences: amount (Double), termIndex (Int)
-• LoanPreferencesUseCase: load/save предпочтений, load/save темы (LoanTheme)
-• DefaultLoanPreferencesUseCase: реализация через LoanPreferencesRepository
-• LoanApplicationUseCase: оформление заявки
-• DefaultLoanApplicationUseCase: реализация через LoanApplicationRepository
-• DomainError: доменная ошибка (statusCode, errorCode?, message)
-• LoanCalculatorStore: стор калькулятора (используется в тестах)
-• Тестовые моки:
-   • MockLoanApplicationUseCase: имитирует результаты apply(loan:)
-   • MockLoanPreferencesUseCase: хранит/возвращает сохраненные prefs и theme
+Структура (ключевое)
+• Package.swift􀰓 — SwiftPM пакет Swinject (поддерживает iOS, macOS, tvOS, watchOS, visionOS).
+• Calculator (модуль приложения):
+   • LoanCalculatorStore.swift􀰓 — Store: хранит LoanState, применяет loanReducer, управляет сайд‑эффектами (загрузка/сохранение префов, отправка заявки), предоставляет вычисляемые значения для UI.
+   • LoanState.swift􀰓 — состояние экрана: amount, termIndex, диапазоны, terms, isLoading, result, errorMessage, theme.
+   • LoanApplicationRequest.swift􀰓 / LoanApplicationResult.swift􀰓 — модели запроса/результата.
+   • DomainError.swift􀰓 — доменная ошибка.
+   • Use cases:
+      • LoanApplicationUseCase.swift — протокол + DefaultLoanApplicationUseCase (делегирует в Repository).
+      • LoanPreferencesUseCase.swift􀰓 — протокол + DefaultLoanPreferencesUseCase (делегирует в Repository).
+   • Repositories (контракты):
+      • LoanApplicationRepository.swift􀰓 — отправка заявки.
+      • LoanPreferencesRepository.swift􀰓 — загрузка/сохранение преференций и темы.
+• Tests:
+   • LoanCalculatorStoreTests.swift􀰓 — тесты Store на Swift Testing.
+   • Моки: MockLoanApplicationUseCase.swift􀰓, MockLoanPreferencesUseCase.swift􀰓.
 
-Сборка и запуск
-Через Xcode
-1. Откройте проект (Calculator.xcodeproj или .xcworkspace).
-2. Выберите схему Calculator.
-3. Выберите симулятор (например, iPhone 15).
-4. Запустите Cmd+R.
+Как это работает (коротко)
+• Store (@MainActor) хранит LoanState и принимает LoanAction через send(_:)
+• .setAmount/.setTermIndex — применяет редьюсер и сохраняет преференции.
+• .setTheme — применяет редьюсер и сохраняет тему.
+• .apply — выставляет загрузку, формирует LoanApplicationRequest, вызывает useCase.apply, по результату пишет result или errorMessage и снимает загрузку.
+• Вычисляемые значения для UI:
+   • Ставка: 15%
+   • totalRepaymentValue = amount + amount * 0.15 (округление)
+   • formattedAmount, totalRepaymentText, interestRateText, dueDateText (через FormatStyle API)
 
-Через командную строку (xcodebuild)
-• Список схем:
-xcodebuild -list -project Calculator.xcodeproj
-• Сборка:
-xcodebuild -project Calculator.xcodeproj -scheme Calculator -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15'
-• Запуск:
-xcodebuild test -project Calculator.xcodeproj -scheme Calculator -destination 'platform=iOS Simulator,name=iPhone 15'
+Установка и запуск
+1. Требования
+• Xcode 15+, Swift 5.9+
+• Платформы Swinject: iOS 12+, macOS 10.13+, tvOS 12+, watchOS 4+, visionOS 1+
 
-Тестирование (Swift Testing)
-В Xcode:
-• Откройте Test Navigator (Cmd+6) и запустите тесты или Cmd+U для всех.
+2. Клонирование
+• git clone <repo_url>
+• Откройте проект в Xcode (Package.swift􀰓 или .xcodeproj/.xcworkspace — в зависимости от структуры).
 
-Что проверяют тесты
-• Инициализация LoanCalculatorStore подхватывает сохраненные предпочтения и тему.
-• Обновление суммы сохраняет предпочтения.
-• Расчет общей суммы платежа (пример: 10 000 при 15% → 11 500) и форматирование процента.
-• Успешная заявка обновляет result и снимает isLoading.
-• Ошибка заявки устанавливает errorMessage и снимает isLoading.
+3. Зависимости
+• Swinject уже в репозитории как SwiftPM пакет. Xcode подтянет и соберет автоматически.
 
-Зависимости и конфигурация
-• Внешних API-ключей нет.
-• Хранение prefs/theme — через LoanPreferencesRepository (реализация может использовать UserDefaults).
-• Оформление заявки — через LoanApplicationRepository (может быть заглушкой/имитацией сети).
-• В тестах используются моки MockLoanApplicationUseCase и MockLoanPreferencesUseCase.
+4. Сборка и запуск
+• Выберите схему приложения (например, Calculator) и соберите (Cmd+B).
+• Запустите на симуляторе или устройстве (Cmd+R).
+• Для устройства при необходимости настройте Signing (Team) в Signing & Capabilities.
 
-Полезные команды
-• Очистка DerivedData:
-rm -rf ~/Library/Developer/Xcode/DerivedData
-• Документация (если используете DocC):
-xcodebuild docbuild -scheme Calculator -destination 'platform=macOS' -derivedDataPath ./DerivedData
+Тесты
+• Xcode: Product > Test (Cmd+U).
+• Используется Swift Testing:
+   • Проверяется инициализация Store из сохраненных преференций/темы.
+   • Сохранение при изменении суммы/срока.
+   • Корректный расчет totalRepayment и interestRateText.
+   • Успешная и неуспешная отправка заявки (result/errorMessage, снятие isLoading).
+• Моки: MockLoanApplicationUseCase, MockLoanPreferencesUseCase.
 
-Стиль и практики
-• Используется Swift Concurrency (async/await).
-• Протоколы помечены Sendable для потокобезопасности.
-• Тесты — через Swift Testing (@Suite, @Test).
+DI в реальном приложении (пример на словах)
+• В композиционном корне создается Container/Assembler (Swinject).
+• Регистрируются:
+   • LoanApplicationRepository (реальная сеть) -> LoanApplicationUseCase (Default…)
+   • LoanPreferencesRepository (например, UserDefaults) -> LoanPreferencesUseCase (Default…)
+   • LoanCalculatorStore — резолвится с нужными зависимостями.
+• Экран получает готовый Store через контейнер.
+
+Заметки
+• DomainError: Equatable реализован упрощенно (в тестовых целях).
+• Реальные реализации репозиториев (сеть/хранилище) опущены — в тестовом проекте достаточно контрактов и моков.
+• Store помечен @MainActor для потокобезопасной работы с UI.
