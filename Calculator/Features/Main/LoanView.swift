@@ -11,7 +11,7 @@ struct LoanView: View {
     
     @StateObject private var store: LoanStore
     
-    init(store: LoanStore) {
+    nonisolated init(store: LoanStore) {
         _store = StateObject(wrappedValue: store)
     }
     
@@ -69,6 +69,9 @@ struct LoanView: View {
             Text(store.state.errorMessage ?? "")
         }
         .preferredColorScheme(preferredScheme)
+        .onAppear {
+            store.loadPreferences()
+        }
     }
     
     // MARK: - Content View
@@ -119,15 +122,15 @@ struct LoanView: View {
                     .font(.title3).bold()
             }
             
-            GradientSlider(
+            Slider(
                 value: Binding(
                     get: { store.state.amount },
                     set: { store.send(.setAmount($0)) }
                 ),
-                range: store.state.amountRange,
-                gradient: Gradient(colors: [Color.green, Color.yellow])
+                in: store.state.amountRange
             )
-            .frame(height: 32)
+            .accentColor(.green)
+            .tint(.green)
             
             HStack {
                 Text("$5,000")
@@ -140,7 +143,6 @@ struct LoanView: View {
     }
     
     // MARK: - Term Section
-    
     private var termSection: some View {
         VStack(spacing: 8) {
             HStack {
@@ -151,25 +153,30 @@ struct LoanView: View {
                     .font(.title3).bold()
             }
             
-            DiscreteSlider(
-                index: Binding(
-                    get: { store.state.termIndex },
-                    set: { store.send(.setTermIndex($0)) }
+            Slider(
+                value: Binding(
+                    get: { Double(store.state.termIndex) },
+                    set: {
+                        let newIndex = Int($0)
+                        store.send(.setTermIndex(newIndex))
+                    }
                 ),
-                values: store.state.terms,
-                gradient: Gradient(colors: [Color.orange, Color.yellow])
+                in: 0...Double(store.state.terms.count - 1),
+                step: 1
             )
-            .frame(height: 32)
+            .accentColor(.orange)
+            .tint(.orange)
             
             HStack {
-                Text("\(store.state.terms.first ?? 7)")
+                Text("7")
                 Spacer()
-                Text("\(store.state.terms.last ?? 28)")
+                Text("28")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
         }
     }
+    
     
     // MARK: - Loan Details Section
     
@@ -202,17 +209,19 @@ struct LoanView: View {
     // MARK: - Apply Button
     
     private var applyButton: some View {
-        Button("loan.apply_now") {
+        Button {
             store.send(.apply)
+        } label: {
+            Text("loan.apply_now")
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.accentColor)
+                .cornerRadius(14)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.accentColor)
         .foregroundColor(.white)
-        .cornerRadius(14)
     }
 }
 
 #Preview {
-    //    LoanCalculatorView()
+    //    LoanView()
 }

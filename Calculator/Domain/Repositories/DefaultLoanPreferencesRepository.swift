@@ -8,7 +8,7 @@
 import Foundation
 
 final class DefaultLoanPreferencesRepository: BaseRepository, LoanPreferencesRepository {
-    
+   
     // MARK: Properties
     
     private let userDefaultManager: UserDefaultsManager
@@ -21,11 +21,20 @@ final class DefaultLoanPreferencesRepository: BaseRepository, LoanPreferencesRep
     
     // MARK: Public Methods
     
-    func load() async -> LoanPreferences {
-        let amount = userDefaultManager.amount.isZero ? 5000 : userDefaultManager.amount
-        let term = userDefaultManager.termIndex.isMultiple(of: 2) ? 3 : 1
-        
-        return LoanPreferences(amount: Double(amount), termIndex: term)
+    func loadAmount() async -> Double {
+        userDefaultManager.amount.isZero ? 5000 : userDefaultManager.amount
+    }
+    
+    func loadTermIndex() async -> Int {
+        userDefaultManager.termIndex
+    }
+    
+    func saveAmount(_ prefs: Double) {
+        userDefaultManager.amount = prefs
+    }
+    
+    func saveTermIndex(_ prefs: Int) {
+        userDefaultManager.termIndex = prefs
     }
     
     func loadTheme() async -> LoanTheme {
@@ -33,12 +42,7 @@ final class DefaultLoanPreferencesRepository: BaseRepository, LoanPreferencesRep
         let theme = LoanTheme(rawValue: themeRaw)!
         return theme
     }
-    
-    func save(prefs preferred: LoanPreferences) {
-        userDefaultManager.amount = preferred.amount
-        userDefaultManager.termIndex = preferred.termIndex
-    }
-    
+
     func saveTheme(theme: LoanTheme) {
         userDefaultManager.theme = theme.rawValue
     }

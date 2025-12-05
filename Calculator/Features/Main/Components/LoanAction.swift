@@ -10,7 +10,7 @@
 enum LoanAction {
     case setAmount(Double)
     case setTermIndex(Int)
-    case apply                      // триггер сайд‑эффекта
+    case apply
     case setLoading(Bool)
     case setResult(LoanApplicationResult?)
     case setErrorMessage(String?)

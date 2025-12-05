@@ -12,17 +12,27 @@ import Foundation
 @testable import Calculator
 
 final class MockLoanPreferencesUseCase: LoanPreferencesUseCase, @unchecked Sendable {
+    
+    var savedAmount: Double = 5000
+    var savedTermIndex: Int = 1
     var savedTheme: LoanTheme = .dark
-    var savedPrefs: LoanPreferences = LoanPreferences(amount: 5000, termIndex: 1)
-    var didSavePrefs = false
+    
+    var didSaveAmount = false
+    var didSaveTermIndex = false
     var didSaveTheme = false
     
+    func loadAmount() async -> Double { savedAmount }
+    func loadTermIndex() async -> Int { savedTermIndex }
     func loadTheme() async -> LoanTheme { savedTheme }
-    func load() async -> LoanPreferences { savedPrefs }
     
-    func save(_ prefs: LoanPreferences) {
-        savedPrefs = prefs
-        didSavePrefs = true
+    func saveAmount(_ amount: Double) {
+        savedAmount = amount
+        didSaveAmount = true
+    }
+    
+    func saveTermIndex(_ index: Int) {
+        savedTermIndex = index
+        didSaveTermIndex = true
     }
     
     func saveTheme(_ theme: LoanTheme) {

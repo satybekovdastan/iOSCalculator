@@ -13,7 +13,7 @@ final class UseCaseAssembly: Assembly {
     
         container.register(ApplyForLoanUseCase.self) { resolver in
             guard let repository = resolver.resolve(ApplyForLoanRepository.self) else {
-                fatalError("Unable to resolve LoanApplicationRepository")
+                fatalError("Unable to resolve ApplyForLoanRepository")
             }
             
             return DefaultApplyForLoanUseCase(repository: repository)

@@ -8,8 +8,10 @@
 import Foundation
 
 protocol LoanPreferencesRepository {
-    func load() async ->  LoanPreferences
     func loadTheme() async ->  LoanTheme
-    func save(prefs: LoanPreferences)
+    func loadAmount() async -> Double
+    func loadTermIndex() async -> Int
+    func saveAmount(_ prefs: Double)
+    func saveTermIndex(_ prefs: Int)
     func saveTheme(theme: LoanTheme)
 }

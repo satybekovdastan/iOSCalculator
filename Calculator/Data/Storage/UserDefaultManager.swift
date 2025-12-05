@@ -4,22 +4,22 @@
 //
 //  Created by Das
 //
-
 import Foundation
-
-import Foundation
+import os.lock 
 
 protocol UserDefaultsManager: AnyObject {
     
-    var theme: String { get set}
-    var amount: Double { get set}
-    var termIndex: Int { get set}
+    var theme: String { get set }
+    var amount: Double { get set }
+    var termIndex: Int { get set }
     
 }
 
-final class DefaultUserDefaultsManager: UserDefaultsManager {
+final class DefaultUserDefaultsManager: @unchecked Sendable, UserDefaultsManager {
     
-    nonisolated(unsafe) static let shared = DefaultUserDefaultsManager()
+    private let lock = OSAllocatedUnfairLock()
+    
+    static let shared = DefaultUserDefaultsManager()
     
     private init() {
         // Private initializer to ensure singleton pattern
@@ -31,43 +31,45 @@ final class DefaultUserDefaultsManager: UserDefaultsManager {
         static let theme = "theme_key"
     }
     
-    @UserDefault(UserDefaultsKeys.amount, defaultValue: 0)
-    var amount: Double
+    // MARK: - UserDefaultsManager Properties
     
-    @UserDefault(UserDefaultsKeys.termIndex, defaultValue: 0)
-    var termIndex: Int
-    
-    @UserDefault(UserDefaultsKeys.theme, defaultValue: "system")
-    var theme: String
-    
-  
-}
-
-
-@propertyWrapper
-final class UserDefault<T> {
-    private let key: String
-    private let defaultValue: T
-    private var cachedValue: T?
-
-    init(_ key: String, defaultValue: T) {
-        self.key = key
-        self.defaultValue = defaultValue
-    }
-
-    var wrappedValue: T {
+    var amount: Double {
         get {
-            if let cachedValue = cachedValue {
-                return cachedValue
+            lock.withLock {
+                return UserDefaults.standard.double(forKey: UserDefaultsKeys.amount)
             }
-            let value = UserDefaults.standard.object(forKey: key) as? T ?? defaultValue
-            cachedValue = value
-            return value
         }
         set {
-            cachedValue = newValue
-            UserDefaults.standard.set(newValue, forKey: key)
+            lock.withLock {
+                UserDefaults.standard.set(newValue, forKey: UserDefaultsKeys.amount)
+            }
+        }
+    }
+    
+    var termIndex: Int {
+        get {
+            lock.withLock {
+                return UserDefaults.standard.integer(forKey: UserDefaultsKeys.termIndex)
+            }
+        }
+        set {
+            lock.withLock {
+                UserDefaults.standard.set(newValue, forKey: UserDefaultsKeys.termIndex)
+                UserDefaults.standard.synchronize()
+            }
+        }
+    }
+    
+    var theme: String {
+        get {
+            lock.withLock {
+                return UserDefaults.standard.string(forKey: UserDefaultsKeys.theme) ?? "system"
+            }
+        }
+        set {
+            lock.withLock {
+                UserDefaults.standard.set(newValue, forKey: UserDefaultsKeys.theme)
+            }
         }
     }
 }
-

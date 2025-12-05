@@ -8,117 +8,121 @@
 import Combine
 import Foundation
 
-/// LoanCalculatorStore
-/// Хранит состояние экрана калькулятора займа и управляет им в стиле UDF/Redux.
-/// - Применяет `loanReducer` к `LoanState` по входящим `LoanAction`.
-/// - Через `ApplyForLoanUseCase` отправляет заявку (`apply()`).
-/// - Через `LoanPreferencesUseCase` загружает и сохраняет последние выборы (amount, term, theme).
-/// - Предоставляет вычисляемые значения для UI: процентную ставку, сумму к возврату и дату возврата.
 @MainActor
 final class LoanStore: ObservableObject {
+    @Published var state: LoanState = LoanState()
     
-    @Published private(set) var state: LoanState
+    private let reducer: LoanReducer
+    private let environment: LoanEnvironment
     
-    private let useCase: ApplyForLoanUseCase
-    private let prefsUseCase: LoanPreferencesUseCase
-    private let reducer: (inout LoanState, LoanAction) -> Void
-    
-    private let interestRate: Double = 0.15 // 15%
-    
-    init(useCase: ApplyForLoanUseCase, prefsUseCase: LoanPreferencesUseCase) {
-        self.useCase = useCase
-        self.prefsUseCase = prefsUseCase
-        self.state = LoanState()
-        self.reducer = loanReducer
-        
-        Task { @MainActor in
-            await loadPreferences()
-        }
+    private var amountSaveTask: Task<Void, Never>?
+    private var termIndexSaveTask: Task<Void, Never>?
+    private var themeSaveTask: Task<Void, Never>?
+
+    init(initialState: LoanState = LoanState(), reducer: @escaping LoanReducer, environment: LoanEnvironment) {
+        self.state = initialState
+        self.reducer = reducer
+        self.environment = environment
     }
-    
-    // MARK: - Preferences
-    
-    private func loadPreferences() async {
-        state.theme = await prefsUseCase.loadTheme()
-        let prefs = await prefsUseCase.load()
-        state.amount = prefs.amount
-        state.termIndex = prefs.termIndex
-    }
-    
-    private func savePreferences() {
-        let prefs = LoanPreferences(amount: state.amount, termIndex: state.termIndex)
-        prefsUseCase.save(prefs)
-    }
-    
-    private func saveThemePreference() {
-        prefsUseCase.saveTheme(state.theme)
-    }
-    
-    // MARK: - Actions
     
     func send(_ action: LoanAction) {
+        guard let task = reducer(&state, action, environment) else {
+            handleSyncAction(action)  
+            return
+        }
+        
+        Task { @MainActor in
+            let newAction = await task.value
+            self.send(newAction)
+        }
+    }
+    
+    private func handleSyncAction(_ action: LoanAction) {
         switch action {
-        case .setAmount, .setTermIndex:
-            reducer(&state, action)
-            savePreferences()
+        case .setAmount:
+            debounceSaveAmount()
+            
+        case .setTermIndex:
+            debounceSaveTermIndex()
+            
         case .setTheme:
-            reducer(&state, action)
-            saveThemePreference()
-        case .apply:
-            Task { @MainActor in
-                await apply()
-            }
+            debounceSaveTheme()
+            
         default:
-            reducer(&state, action)
+            break
         }
     }
     
-    private func apply() async {
-        reducer(&state, .setLoading(true))
-        
-        let request = LoanApplicationRequest(
-            amount: Int(state.amount),
-            period: state.terms[state.termIndex],
-            totalRepayment: totalRepaymentValue
-        )
-        
-        let result = await useCase.apply(loan: request)
-        switch result {
-        case .success(let value):
-            reducer(&state, .setResult(value))
-        case .failure(let error):
-            reducer(&state, .setErrorMessage(error.message))
+    private func debounceSaveAmount() {
+        amountSaveTask?.cancel()
+        amountSaveTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            if !Task.isCancelled {
+                environment.preferences.saveAmount(state.amount)
+            }
         }
-        
-        reducer(&state, .setLoading(false))
     }
     
-    // MARK: - Computed for UI
+    private func debounceSaveTermIndex() {
+        termIndexSaveTask?.cancel()
+        termIndexSaveTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            if !Task.isCancelled {
+                environment.preferences.saveTermIndex(state.termIndex)
+            }
+        }
+    }
     
+    private func debounceSaveTheme() {
+        themeSaveTask?.cancel()
+        themeSaveTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            if !Task.isCancelled {
+                environment.preferences.saveTheme(state.theme)
+            }
+        }
+    }
+    
+    func loadPreferences() {
+         Task { @MainActor in
+             async let amount = environment.preferences.loadAmount()
+             async let termIndex = environment.preferences.loadTermIndex()
+             async let theme = environment.preferences.loadTheme()
+
+             self.state.amount = await amount
+             self.state.termIndex = await termIndex
+             self.state.theme = await theme
+         }
+     }
+}
+
+
+extension LoanStore {
     var formattedAmount: String {
-        let fmt = NumberFormatter()
-        fmt.numberStyle = .decimal
-        fmt.groupingSeparator = ","
-        fmt.maximumFractionDigits = 0
-        return fmt.string(from: NSNumber(value: state.amount)) ?? "\(Int(state.amount))"
-    }
-    
-    var totalRepaymentValue: Int {
-        let total = state.amount + state.amount * interestRate
-        return Int(total.rounded())
-    }
-    
-    var totalRepaymentText: String {
-        totalRepaymentValue.formatted(.number.grouping(.automatic))
+        String(format: "%.0f", state.amount)
     }
     
     var interestRateText: String {
-        interestRate.formatted(.percent.precision(.fractionLength(0)))
+        "15.0%"
+    }
+    
+    var totalRepaymentText: String {
+        let total = totalRepaymentValue
+        return String(format: "%.2f", total)
+    }
+    
+    var totalRepaymentValue: Double {
+        state.amount + state.amount * Constants.percent
     }
     
     var dueDateText: String {
-        let days = state.terms[state.termIndex]
-        let dueDate = Calendar.current.date(byAdding: .day, value: days, to: Date()) ?? Date()
+        let calendar = Calendar.current
+        let dueDate = calendar.date(
+            byAdding: .day,
+            value: state.terms[state.termIndex],
+            to: Date()
+        )!
+       
         return dueDate.formatted(
             .dateTime
                 .locale(Locale(identifier: "en_US"))

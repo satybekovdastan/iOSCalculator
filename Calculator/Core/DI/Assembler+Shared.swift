@@ -13,11 +13,11 @@ extension Assembler {
         let container = Container()
         
         let assembler = Assembler([
-            ViewAssembly(),
             ManagerAssembly(),
             RepositoryAssembly(),
             UseCaseAssembly(),
-            StoreAssembly()
+            StoreAssembly(),
+            ViewAssembly()
         ], container: container)
         
         return assembler

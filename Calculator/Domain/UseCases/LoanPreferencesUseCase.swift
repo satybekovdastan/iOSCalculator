@@ -7,14 +7,16 @@
 
 import Foundation
 
-struct LoanPreferences {
-    let amount: Double
-    let termIndex: Int
-}
+//struct LoanPreferences {
+//    let amount: Double
+//    let termIndex: Int
+//}
 
 protocol LoanPreferencesUseCase: Sendable {
-    func load() async -> LoanPreferences
-    func save(_ prefs: LoanPreferences)
+    func loadAmount() async -> Double
+    func loadTermIndex() async -> Int
+    func saveAmount(_ prefs: Double)
+    func saveTermIndex(_ prefs: Int)
     func loadTheme() async -> LoanTheme
     func saveTheme(_ theme: LoanTheme)
 }
@@ -26,13 +28,21 @@ final class DefaultLoanPreferencesUseCase: LoanPreferencesUseCase, @unchecked Se
     init(repository: LoanPreferencesRepository) {
         self.repository = repository
     }
-    
-    func load() async -> LoanPreferences {
-        return await repository.load()
+
+    func loadAmount() async -> Double {
+        return await repository.loadAmount()
     }
     
-    func save(_ prefs: LoanPreferences) {
-        repository.save(prefs: prefs)
+    func loadTermIndex() async -> Int {
+        return await repository.loadTermIndex()
+    }
+    
+    func saveAmount(_ prefs: Double) {
+        repository.saveAmount(prefs)
+    }
+    
+    func saveTermIndex(_ prefs: Int) {
+        repository.saveTermIndex(prefs)
     }
     
     func loadTheme() async -> LoanTheme {

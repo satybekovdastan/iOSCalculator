@@ -12,19 +12,25 @@ final class StoreAssembly: @preconcurrency Assembly {
     
     func assemble(container: Swinject.Container) {
         container.register(LoanStore.self) { resolver in
-            guard let userUseCase = resolver.resolve(ApplyForLoanUseCase.self) else {
-                fatalError("Assembler was unable to resolve LoanApplicationUseCase")
+            guard let applyUseCase = resolver.resolve(ApplyForLoanUseCase.self) else {
+                fatalError("Assembler was unable to resolve ApplyForLoanUseCase")
             }
             
             guard let prefsUseCase = resolver.resolve(LoanPreferencesUseCase.self) else {
                 fatalError("Assembler was unable to resolve LoanPreferencesUseCase")
             }
             
+            let environment = LoanEnvironment.live(
+                applyForLoan: applyUseCase,
+                preferences: prefsUseCase
+            )
+            
             return LoanStore(
-                useCase:  userUseCase,
-                prefsUseCase: prefsUseCase
+                reducer: loanReducer,  
+                environment: environment
             )
         }.inObjectScope(.transient)
+
     }
     
 }
