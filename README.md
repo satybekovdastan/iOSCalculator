@@ -1,8 +1,8 @@
 # Loan Calculator (тестовый проект)
 
-![Light](screenshots/screen.png)
+![Light](screenshots/light_screen.png)
 
-![Dark](screenshots/screen_dark.png)
+![Dark](screenshots/dark_screen.png)
 
 ## Кратко
 
