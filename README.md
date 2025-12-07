@@ -1,8 +1,9 @@
 # Loan Calculator (тестовый проект)
 
-![Light](screenshots/light_screen.png)
-
-![Dark](screenshots/dark_screen.png)
+<p float="left">
+  <img src="screenshots/light_screen.png" alt="Light theme" width="300"/>
+  <img src="screenshots/dark_screen.png" alt="Dark theme" width="300"/>
+</p>
 
 ## Кратко
 
